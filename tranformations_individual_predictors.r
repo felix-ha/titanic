@@ -19,7 +19,7 @@ ggplot(df, aes(log(Fare))) +
   theme_bw()
 
 
-fit<- BoxCoxTrans()
+fit<- BoxCoxTrans(df$Fare)
 fit
 
 Fare_trans <- predict(fit, df$Fare)
