@@ -16,10 +16,16 @@ grid_search_xgboost <- function(df) {
                    AccuracySD = vector(mode = "numeric"))
   
   
-  etas <- c(0.1, 0.25)
-  nroundss <- c(50, 100, 200)
-  max_depths <- c(2,4, 10)
+  etas <- c(0.1, 0.3)
+  nroundss <- c(50, 100)
+  max_depths <- c(3, 6, 10)
   
+  
+  
+  etas <- c(0.3)
+  nroundss <- c(50)
+  max_depths <- c(6)
+
   
   for(max_depth in max_depths){
     for(eta in etas) {
@@ -79,10 +85,10 @@ grid_search_xgboost <- function(df) {
 }
 
 
-model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE){
-  
-  
-  set.seed(2017)
+model_evaluation <- function(df, cores = 1, tuneLength = 1, repeats = 10,
+                             do_print = FALSE, adaboost = FALSE){
+
+    set.seed(2017)
   
   cl <- makePSOCKcluster(cores)
   registerDoParallel(cl)
@@ -93,28 +99,13 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
                    Accuracy = vector(mode = "numeric"))
   
   
-  train_control <- trainControl(method = "repeatedcv", repeats = 10, number = 10)
+  train_control <- trainControl(method = "repeatedcv", repeats = repeats, number = 10)
 
-  
-
-# XGBoost -----------------------------------------------------------------
-
-  fit_result <- grid_search_xgboost(df)
-  
-  
-  fit_result <- fit_result %>%
-    arrange(desc(Accuracy))
-  
-  result %<>% add_row(Model = "xgboost",
-                      Accuracy = fit_result$Accuracy[1])
-  
-  
-  if(do_print) {
-    print("xgboost")
-    print(fit_result)
-    cat("\n")
-  }
-  
+ 
+#  Data Transformation -----------------------------------------------------
+# 
+   df %<>% mutate(Survived = factor(Survived))
+#   
 # Logistic Regression -----------------------------------------------------
 
 
@@ -128,7 +119,7 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
 
   fit_result <- as_tibble(fit$results) %>%
     arrange(desc(Accuracy))
-  
+
   result %<>% add_row(Model = "glm",
                       Accuracy = fit_result$Accuracy[1])
   if(do_print) {
@@ -136,14 +127,7 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
     print(fit_result)
     cat("\n")
   }
-  
-  
-  if(do_print && short_val) {
-    result %<>% arrange(desc(Accuracy))
-    print(result)
-    return(result)
-  }
-  
+
 
 # rpart -------------------------------------------------------------------
 
@@ -153,12 +137,12 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
     data = df,
     trControl = train_control,
     method = "rpart",
-    tuneLength = 10
+    tuneLength = tuneLength
   )
 
   fit_result <- as_tibble(fit$results) %>%
     arrange(desc(Accuracy))
-  
+
   result %<>% add_row(Model = "rpart",
                       Accuracy = fit_result$Accuracy[1])
   if(do_print) {
@@ -168,7 +152,77 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
   }
 
 
+  
+# adaboost ----------------------------------------------------------------
 
+  if(adaboost) {
+
+  fit  <-  train(
+    form = Survived ~.,
+    data = df,
+    trControl = train_control,
+    method = "adaboost",
+    tuneLength = tuneLength
+  )
+
+  fit_result <- as_tibble(fit$results) %>%
+    arrange(desc(Accuracy))
+
+  result %<>% add_row(Model = "adaboost",
+                      Accuracy = fit_result$Accuracy[1])
+  if(do_print) {
+    print("adaboost")
+    print(fit_result)
+    cat("\n")
+  }
+
+  }
+
+# GBM ---------------------------------------------------------------------
+
+    fit  <-  train(
+    form = Survived ~.,
+    data = df,
+    trControl = train_control,
+    method = "gbm",
+    tuneLength = tuneLength
+  )
+  
+  fit_result <- as_tibble(fit$results) %>%
+    arrange(desc(Accuracy))
+  
+  result %<>% add_row(Model = "gbm",
+                      Accuracy = fit_result$Accuracy[1])
+  if(do_print) {
+    print("gbm")
+    print(fit_result)
+    cat("\n")
+  }
+  
+  
+  # xgboost ----------------------------------------------------------------
+  
+  
+  fit  <-  train(
+    form = Survived ~.,
+    data = df,
+    trControl = train_control,
+    method = "xgbTree",
+    tuneLength = tuneLength
+  )
+  
+  fit_result <- as_tibble(fit$results) %>%
+    arrange(desc(Accuracy))
+  
+  result %<>% add_row(Model = "xgbTree",
+                      Accuracy = fit_result$Accuracy[1])
+  if(do_print) {
+    print("xgbTree")
+    print(fit_result)
+    cat("\n")
+  }
+  
+  
 
 # bagging -----------------------------------------------------------------
 
@@ -176,9 +230,10 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
     form = Survived ~.,
     data = df,
     trControl = train_control,
-    method = "treebag"
+    method = "treebag",
+    tuneLength = tuneLength
   )
-  
+
   fit_result <- as_tibble(fit$results) %>%
     arrange(desc(Accuracy))
 
@@ -189,23 +244,23 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
     print(fit_result)
     cat("\n")
   }
-  
-  
-  
-  
+
+
+
+
   # SVM linear --------------------------------------------------------------
-  
-  
+
+
   fit <- train(form = Survived ~.,
                data = df,
                trControl = train_control,
                method = "svmLinear",
                preProc = c("center", "scale"),
-               tuneLength = 10)  
-  
+               tuneLength = tuneLength)
+
   fit_result <- as_tibble(fit$results) %>%
     arrange(desc(Accuracy))
-  
+
   result %<>% add_row(Model = "SVM Linear",
                       Accuracy = fit_result$Accuracy[1])
   if(do_print) {
@@ -214,7 +269,7 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
     cat("\n")
   }
 
-  
+
 
 # SVM Radial ---------------------------------------------------------------------
 
@@ -223,11 +278,11 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
                   trControl = train_control,
                   method = "svmRadial",
                   preProc = c("center", "scale"),
-                  tuneLength = 10)  
+                  tuneLength = tuneLength)
 
   fit_result <- as_tibble(fit$results) %>%
     arrange(desc(Accuracy))
-  
+
   result %<>% add_row(Model = "SVM Radial",
                       Accuracy = fit_result$Accuracy[1])
   if(do_print) {
@@ -235,8 +290,26 @@ model_evaluation <- function(df, cores = 1, do_print = FALSE, short_val = FALSE)
     print(fit_result)
     cat("\n")
   }
-  
 
+  # # XGBoost  Custon CV -----------------------------------------------------------------
+  # 
+  #   fit_result <- grid_search_xgboost(df)
+  # 
+  # 
+  #   fit_result <- fit_result %>%
+  #     arrange(desc(Accuracy))
+  # 
+  #   result %<>% add_row(Model = "xgboost",
+  #                       Accuracy = fit_result$Accuracy[1])
+  # 
+  # 
+  #   if(do_print) {
+  #     print("xgboost")
+  #     print(fit_result)
+  #     cat("\n")
+  #   }
+  #   
+  #
 
 
   result %<>% arrange(desc(Accuracy))

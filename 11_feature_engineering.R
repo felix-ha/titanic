@@ -7,59 +7,55 @@ library(magrittr)
 source("model_selection.r")
 
 
-preprocess_age_overall_mean_convert_cabin <- function(df) {
-  df <- df %>%
-    select(-PassengerId, -Ticket, -Name)
+preprocess_cabin_embarked <- function(df){
   
-  df <- df %>% 
-    mutate(Survived = as_factor(Survived),
-           Pclass = as_factor(Pclass),
+  df %<>%
+    select(-PassengerId, -Ticket, -Name) %>% 
+    mutate(Pclass = factor(Pclass),
            Sex = factor(Sex),
-           Cabin = ifelse(is.na(Cabin), "NA", str_sub(Cabin,1,1)),
-           Cabin = as_factor(Cabin),
-           Embarked = ifelse(is.na(Embarked), "NA", Embarked),
-           Embarked = as_factor(Embarked))
+           
+           Cabin = ifelse(is.na(Cabin), "NotAv", str_sub(Cabin,1,1)),
+           Cabin = factor(Cabin, levels = c("NotAv", "C", "E", "G", "D", "A", "B", "F", "T")),
+           
+           Embarked = ifelse(is.na(Embarked), "NotAv", Embarked),
+           Embarked = factor(Embarked, levels = c("NotAv", "S", "C", "Q")),
+           
+           Age = ifelse(is.na(Age), 29.7, Age),
+           
+           Fare = ifelse(is.na(Fare), 0, Fare))
   
-  df <- df %>%
-    mutate(Age = ifelse(is.na(Age), 29.7, Age))
   
-  return(df)
-}
-
-preprocess_age_overall_mean <- function(df){
-  
-  df <- df %>%
-    select(-PassengerId, -Ticket, -Name, -Cabin, -Embarked)
-  
-  df <- df %>%
-    mutate(Survived = factor(Survived),
-           Pclass = factor(Pclass),
-           Sex = factor(Sex))
-  
-  df <- df %>%
-    mutate(Age = ifelse(is.na(Age), 29.7, Age))
   
   return(df)
   
+  
 }
 
-preprocess_age_drop_na <- function(df){
+preprocess_na_overall_mean <- function(df){
   
-  # print("Pre-Processing: Drop NA's")
-  # cat("\n")
+  df %<>%
+    select(-PassengerId, -Ticket, -Name, -Cabin, -Embarked) %>% 
+    mutate(Pclass = factor(Pclass),
+           Sex = factor(Sex),
+
+           Age = ifelse(is.na(Age), 29.7, Age),
+           
+           Fare = ifelse(is.na(Fare), 0, Fare))
   
-  #Filtering not meaningfull variables at first sight (just for now, for example Embarked)
-  df <- df %>%
-    select(-PassengerId, -Ticket, -Name, -Cabin, -Embarked)
   
-  df <- df %>%
-    mutate(Survived = factor(Survived),
-           Pclass = factor(Pclass),
-           Sex = factor(Sex))
   
-  df <- df %>%
-    filter(!is.na(Age))
+  return(df)
   
+}
+
+preprocess_na_drop <- function(df){
+  
+  df %<>%
+    select(-PassengerId, -Ticket, -Name, -Cabin, -Embarked) %>% 
+    mutate(Pclass = factor(Pclass),
+           Sex = factor(Sex)) %>%
+    filter(!is.na(Age), !is.na(Fare))
+
   return(df)
 }
 
@@ -69,9 +65,15 @@ preprocess_age_drop_na <- function(df){
 df_raw <- read_csv("train.csv")
 
 
-df <- preprocess_age_overall_mean(df_raw)
-df_cabin <- preprocess_age_overall_mean_convert_cabin(df_raw)
 
 
-fit <- model_evaluation(df, cores = 4, do_print = TRUE, short_val = FALSE)
+sink(file.path("log", "EVALUATION_engin.txt"))
+
+df <- preprocess_cabin_embarked(df_raw)
+
+fit <- model_evaluation(df,cores = 4, tuneLength = 1, repeats = 1,
+                        do_print = TRUE, adaboost = FALSE)
+
+sink()
+
 

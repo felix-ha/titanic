@@ -14,6 +14,9 @@ df <- read_csv("train.csv")
 
 # Overview ----------------------------------------------------------------
 
+#check for NA's
+map_dbl(df, ~sum(is.na(.x)))
+
 
 
 #Filtering not meaningfull variables at first sight (just for now, for example Embarked)
@@ -25,6 +28,7 @@ df <- df %>%
          Sex = factor(Sex))
 
 head(df)
+
 
 
 # near zero variance
