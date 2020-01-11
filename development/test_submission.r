@@ -1,6 +1,8 @@
 rm(list = ls())
 library(tidyverse)
 library(xgboost)
+library(magrittr)
+library(rpart)
 
 
 preprocess_age_overall_mean <- function(df){
@@ -40,30 +42,23 @@ map_dbl(test_full, ~sum(is.na(.x)))
 
 
 
+training %<>% mutate(Survived = factor(Survived))
 
-df_model_matrix <- model.matrix(Survived ~ .-1, training)
-dtrain <- xgb.DMatrix(df_model_matrix, label = as.numeric(as.character(training$Survived)))
+fit <- glm(Survived ~ ., data=training, family =binomial(link = "logit"))
+y_probabilities_glm <- predict(fit, test,  type="response")
 
-param <- list(max_depth = 2, eta = 0.3, verbose = 0, nthread = 2)
-
-fit <- xgb.train(param, dtrain, nrounds = 100, objective = "binary:logistic")
-
-df_model_matrix <- model.matrix( ~ .-1, test)
-dtest <- xgb.DMatrix(df_model_matrix)
-y_probabilities <- predict(fit, dtest)
-
-y_predicted <- ifelse(y_probabilities > 0.5, 1, 0)
+fit <- rpart(Survived ~., data=training, method = "class",
+             control = rpart.control(maxdepth = 5, minbucket = 10, minsplit = 10), cp = 0.0001)
+y_probabilities_rpart <- predict(fit, test)[,2]
 
 
 
-# fit <- glm(Survived ~ ., data=df_train, family =binomial(link = "logit"))
-# 
-# 
-# y_predicted <- predict(fit, df_test,  type="response")
-# 
-# threshold <- 0.5
-# y_predicted <- ifelse(y_predicted <= threshold, 0, 1)
-#  <- ifelse(is.na(y_predicted), 0, y_predicted)
+
+threshold <- 0.5
+ensemble <- (y_probabilities_glm + y_probabilities_rpart ) / 2
+
+y_predicted <- ifelse(ensemble <= threshold, 0, 1)
+
 
 prediction_result <- tibble( PassengerId = test_full$PassengerId,
                              Survived= y_predicted)

@@ -60,8 +60,8 @@ ggplot(df, aes(Survived)) +
   theme_bw()
 
 table(df$Survived)
+prop.table(table(df$Survived))
 
-length(df$Survived[df$Survived == 1]) / length(df$Survived)
 
 
 # Categorial --------------------------------------------------------------
