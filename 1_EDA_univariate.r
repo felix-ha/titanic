@@ -1,11 +1,20 @@
 # EDA Univariate
+rm(list = ls())
+
 
 library(tidyverse)
 library(caret)
 library(e1071)
+library(corrplot)
 
 
 df <- read_csv("train.csv")
+
+
+
+# Overview ----------------------------------------------------------------
+
+
 
 #Filtering not meaningfull variables at first sight (just for now, for example Embarked)
 df <- df %>%
@@ -16,6 +25,25 @@ df <- df %>%
          Sex = factor(Sex))
 
 head(df)
+
+
+# near zero variance
+nearZeroVar(df)
+
+
+#correlations: impute age with overall mean
+correlations <- cor(df %>% 
+                      select(Age, SibSp, Parch, Fare) %>%
+                      mutate(Age = ifelse(is.na(Age), 29.7, Age)))
+corrplot(correlations, method = "square")
+corrplot.mixed(correlations)
+
+#find high correlations [Kuhn]
+highCorr <- findCorrelation(correlations, cutoff = .4)
+length(highCorr)
+head(highCorr)
+df_filtered <- df[, -highCorr]
+
 
 
 # Target ------------------------------------------------------------------
