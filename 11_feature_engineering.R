@@ -10,7 +10,7 @@ source("model_selection.r")
 preprocess_temporary <- function(df){
   
   df %<>%
-    select(-PassengerId, -Ticket, -Cabin, -Embarked) %>% 
+    select(-PassengerId, -Ticket, -Embarked) %>% 
     mutate(Pclass = factor(Pclass),
            Sex = factor(Sex),
            
@@ -28,6 +28,15 @@ preprocess_temporary <- function(df){
              TRUE ~ "Special"
            ),
            TitleGroup = factor(TitleGroup)) %>%
+    
+    mutate( Cabin = str_sub(df$Cabin,1,1),
+            Cabin = case_when(
+              str_detect(Cabin, "(D|E|B)") ~ "Top",
+              str_detect(Cabin, "(F|C|G|A|T)") ~ "AVG",
+              TRUE ~ "NotAv"
+            ),
+            Cabin = factor(Cabin)) %>%
+    
     select(-Title, -Name)
   
 
@@ -96,13 +105,12 @@ df_raw <- read_csv("train.csv")
 
 
 
-
 sink(file.path("log", "EVALUATION_engin.txt"))
 
 df <- preprocess_temporary(df_raw)
 
 
-fit <- model_evaluation(df,cores = 3, tuneLength = 3, repeats = 1,
+fit <- model_evaluation(df,cores = 3, tuneLength = 1, repeats = 1,
                         do_print = TRUE, adaboost = FALSE)
 
 sink()
