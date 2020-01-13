@@ -4,6 +4,7 @@ library(tidyverse)
 library(rpart)
 library(magrittr)
 library(gbm)
+library(caret)
 
 
 # n<- 50
@@ -130,13 +131,21 @@ preprocess_df <- function(df){
 
 
 
-training <- preprocess_df(read_csv("train.csv"))
+df <- preprocess_df(read_csv("train.csv"))
 
 
-training %<>% mutate(Survived = factor(Survived))
+df %<>% mutate(Survived = factor(Survived))
 
-test <- training[1:150, ] 
-training <- training[151:nrow(training),] 
+number_of_folds <- 10
+folds <-  createFolds(df$Survived, k = number_of_folds, returnTrain = TRUE)
+
+
+y_predicted <- vector(mode = "numeric", length = nrow(df))
+
+for(fold_index in c(1:number_of_folds)){
+  training <- df[folds[[fold_index]],]
+  test <- df[-folds[[fold_index]],]
+
 
 predictions <- c(LogisticRegression = predict_logistic_regression(training, test),
                  rpart = predict_rpart(training, test),
@@ -146,10 +155,15 @@ observations <-  nrow(test)
 number_of_models <- as.integer(length(predictions) / observations)
 
 M <- matrix(data = predictions, nrow = number_of_models, ncol = observations , byrow = TRUE)
-y_predicted <- colMeans(M)
+y_predicted[-folds[[fold_index]]] <- colMeans(M)
 
 
-y_true <- as.integer(test$Survived) - 1
+
+
+
+}
+
+y_true <- as.integer(df$Survived) - 1
 p <- plot_calibration(y_true, y_predicted)
 print(p)
 
