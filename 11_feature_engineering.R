@@ -10,9 +10,12 @@ source("model_selection.r")
 preprocess_temporary <- function(df){
   
   df %<>%
-    select(-PassengerId, -Ticket, -Embarked) %>% 
+    select(-PassengerId, -Ticket) %>% 
     mutate(Pclass = factor(Pclass),
            Sex = factor(Sex),
+           
+           Embarked = factor(ifelse(is.na(Embarked), "S", Embarked)),
+
            
            
            Age = ifelse(is.na(Age), 29.7, Age),
@@ -36,6 +39,15 @@ preprocess_temporary <- function(df){
               TRUE ~ "NotAv"
             ),
             Cabin = factor(Cabin)) %>%
+    
+    mutate(RelativesFriends = SibSp + Parch,
+           RelativesFriends = case_when(
+             RelativesFriends == 0 ~ "None",
+             RelativesFriends  == 1 ~ "One",
+             RelativesFriends  <= 4 ~ "Small",
+             TRUE ~ "Large"
+    ),
+    RelativesFriends = factor(RelativesFriends)) %>%
     
     select(-Title, -Name)
   
@@ -105,14 +117,14 @@ df_raw <- read_csv("train.csv")
 
 
 
-sink(file.path("log", "EVALUATION_engin.txt"))
+#sink(file.path("log", "EVALUATION_engin.txt"))
 
 df <- preprocess_temporary(df_raw)
 
 
-fit <- model_evaluation(df,cores = 3, tuneLength = 1, repeats = 1,
+fit <- model_evaluation(df,cores = 3, tuneLength = 2, repeats = 1,
                         do_print = TRUE, adaboost = FALSE)
 
-sink()
+#sink()
 
 
