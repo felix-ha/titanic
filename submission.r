@@ -84,13 +84,15 @@ training <- df[1:n_training, ] %>%
 test <- df[(n_training+1) : nrow(df), ]
 
 
+threshold <- 0.5
+
 
 predict_logistic_regression <- function(training, test) {
   
   fit <- glm(Survived ~ ., data=training, family =binomial(link = "logit"))
   
-  y_predicted <- predict(fit, test,  type="response")
-  
+  y_probabilities <- predict(fit, test,  type="response")
+  y_predicted <- ifelse(y_probabilities <= threshold, 0, 1)
   return(y_predicted)
   
 }
@@ -117,16 +119,39 @@ predict_xgboost <- function(training, test) {
   df_model_matrix <- model.matrix( ~ .-1, test)
   dtest <- xgb.DMatrix(df_model_matrix)
   y_probabilities <- predict(fit, dtest)
+  
+  y_probabilities <- ifelse(y_probabilities <= threshold, 0, 1)
   return(y_probabilities)
+}
+
+predict_svm <- function(training, test) {
+
+  train_control <- trainControl(method = "repeatedcv", repeats = 1, number = 2, allowParallel=F)
+  
+  svm.grid <- expand.grid(sigma = 0.0563,
+                          C =  4.5)
+  
+  
+  fit <- train(form = Survived ~.,
+               data = training,
+               trControl = train_control,
+               method = "svmRadial",
+               preProc = c("center", "scale"),
+               tuneGrid =  svm.grid)
+  
+  y_probabilities <- predict(fit, test)
+  
+  return(as.integer(y_probabilities) - 1)
 }
 
 
 
 
 
-
 predictions <- c(LogisticRegression = predict_logistic_regression(training, test),
-                 xgb = predict_xgboost(training, test))
+                 xgb = predict_xgboost(training, test),
+                 svm = predict_svm(training, test))
+
 
 observations <-  nrow(test)
 number_of_models <- as.integer(length(predictions) / observations)
@@ -134,12 +159,19 @@ number_of_models <- as.integer(length(predictions) / observations)
 M <- matrix(data = predictions, nrow = number_of_models, ncol = observations , byrow = TRUE)
 y_predicted <- colMeans(M)
 
-
-threshold <- 0.5
-y_predicted <- ifelse(y_predicted <= threshold, 0, 1)
-
+y_predicted <- as.integer(ifelse(y_predicted <= threshold, 0, 1))
 
 prediction_result <- tibble( PassengerId = PassengerId_test,
                              Survived= y_predicted)
 
 write_csv(prediction_result, "submission.csv")
+
+
+#-----------------
+
+library(corrplot)
+
+df_cor <- tibble(LogReg = M[1, ], xgBoost = M[2, ], svm = M[3, ])
+
+correlations <- cor(df_cor)
+corrplot.mixed(correlations)
