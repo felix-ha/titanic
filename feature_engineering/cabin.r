@@ -45,17 +45,17 @@ ggplot(df_factor, aes(Cabin)) +
   theme_bw()
 
 
-df_factor <-  df %>%
-  mutate(
-    Cabin = str_sub(df$Cabin,1,1),
-    Cabin = case_when(
-      str_detect(Cabin, "(D|E|B)") ~ "Top",
-      str_detect(Cabin, "(F|C|G|A|T)") ~ "AVG",
-      #str_detect(Cabin, "(Master)\\.") ~ "Master",
-      TRUE ~ "NotAv"
-    ),
-    Cabin = factor(Cabin)
-  )
+# df_factor <-  df %>%
+#   mutate(
+#     Cabin = str_sub(df$Cabin,1,1),
+#     Cabin = case_when(
+#       str_detect(Cabin, "(D|E|B)") ~ "Top",
+#       str_detect(Cabin, "(F|C|G|A|T)") ~ "AVG",
+#       #str_detect(Cabin, "(Master)\\.") ~ "Master",
+#       TRUE ~ "NotAv"
+#     ),
+#     Cabin = factor(Cabin)
+#   )
 
 ggplot(df_factor, aes(Cabin)) +
   geom_bar() +

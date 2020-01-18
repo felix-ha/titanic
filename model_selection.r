@@ -109,165 +109,176 @@ model_evaluation <- function(df, cores = 1, tuneLength = 1, repeats = 10,
 # Logistic Regression -----------------------------------------------------
 
 
-  fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "glm",
-    family = "binomial"
-  )
-
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-
-  result %<>% add_row(Model = "glm",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("glm")
-    print(fit_result)
-    cat("\n")
-  }
+  # fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "glm",
+  #   family = "binomial"
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "glm",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("glm")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
 
 
 # rpart -------------------------------------------------------------------
 
 
-  fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "rpart",
-    tuneLength = tuneLength
-  )
-
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-
-  result %<>% add_row(Model = "rpart",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("rpart")
-    print(fit_result)
-    cat("\n")
-  }
+  # fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "rpart",
+  #   tuneLength = tuneLength
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "rpart",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("rpart")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
 
 
   
 # adaboost ----------------------------------------------------------------
 
-  if(adaboost) {
-
-  fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "adaboost",
-    tuneLength = tuneLength
-  )
-
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-
-  result %<>% add_row(Model = "adaboost",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("adaboost")
-    print(fit_result)
-    cat("\n")
-  }
-
-  }
+  # if(adaboost) {
+  # 
+  # fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "adaboost",
+  #   tuneLength = tuneLength
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "adaboost",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("adaboost")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
+  # 
+  # }
 
 # GBM ---------------------------------------------------------------------
 
-    fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "gbm",
-    tuneLength = tuneLength
-  )
-  
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-  
-  result %<>% add_row(Model = "gbm",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("gbm")
-    print(fit_result)
-    cat("\n")
-  }
+  #   fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "gbm",
+  #   tuneLength = tuneLength
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "gbm",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("gbm")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
   
   
   # xgboost ----------------------------------------------------------------
   
-  
-  fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "xgbTree",
-    tuneLength = tuneLength
-  )
-  
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-  
-  result %<>% add_row(Model = "xgbTree",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("xgbTree")
-    print(fit_result)
-    cat("\n")
-  }
+  # xgb.grid <- expand.grid(nrounds = c(50, 100),
+  #                         max_depth = c(8),
+  #                         eta = c( 0.1, 0.3),
+  #                         gamma = c(0.7, 0.75, 0.8),
+  #                         colsample_bytree= c(0.4, 0.6, 0.8),
+  #                         min_child_weight = c(1),
+  #                         subsample  = c(0.5, 0.9))
+  # 
+  # 
+  # 
+  # 
+  # fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "xgbTree",
+  #   tuneGrid =  xgb.grid
+  #   
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "xgbTree",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("xgbTree")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
   
   
 
 # bagging -----------------------------------------------------------------
 
-  fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "treebag",
-    tuneLength = tuneLength
-  )
-
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-
-  result %<>% add_row(Model = "bag",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("bag")
-    print(fit_result)
-    cat("\n")
-  }
+  # fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "treebag",
+  #   tuneLength = tuneLength
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "bag",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("bag")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
 
 
 
 
   # SVM linear --------------------------------------------------------------
 
-
-  fit <- train(form = Survived ~.,
-               data = df,
-               trControl = train_control,
-               method = "svmLinear",
-               preProc = c("center", "scale"),
-               tuneLength = tuneLength)
-
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-
-  result %<>% add_row(Model = "SVM Linear",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("SVM Linear")
-    print(fit_result)
-    cat("\n")
-  }
+# 
+#   fit <- train(form = Survived ~.,
+#                data = df,
+#                trControl = train_control,
+#                method = "svmLinear",
+#                preProc = c("center", "scale"),
+#                tuneLength = tuneLength)
+# 
+#   fit_result <- as_tibble(fit$results) %>%
+#     arrange(desc(Accuracy))
+# 
+#   result %<>% add_row(Model = "SVM Linear",
+#                       Accuracy = fit_result$Accuracy[1])
+#   if(do_print) {
+#     print("SVM Linear")
+#     print(fit_result)
+#     cat("\n")
+#   }
 
 
 
