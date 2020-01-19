@@ -198,7 +198,30 @@ predict_random_forest <- function(training, test) {
   return(y_preditions)
   
 }
+predict_adaboost <- function(training, test) {
+  
+  train_control <- trainControl(method = "repeatedcv",
+                                verbose = 0,
+                                repeats = 1, number = 2, allowParallel=F)
+  
+  
 
+ada.grid <- expand.grid(nIter = 6,  method = "Adaboost.M1")
+
+
+fit  <-  train(
+  form = Survived ~.,
+  data = training,
+  trControl = train_control,
+  method = "adaboost",
+  tuneGrid = ada.grid
+)
+
+y_preditions <-  as.integer(predict(fit, test)) - 1
+
+return(y_preditions)
+
+}
 
 
 
@@ -206,7 +229,8 @@ predictions <- c(LogisticRegression = predict_logistic_regression(training, test
                  xgb = predict_xgboost(training, test),
                  svm = predict_svm(training, test),
                  gbm = predict_gbm(training, test),
-                 random_forest = predict_random_forest(training, test))
+                 random_forest = predict_random_forest(training, test),
+                 adaboost = predict_adaboost(training, test))
 
 
 
@@ -232,7 +256,8 @@ df_cor <- tibble(LogReg = M[1, ],
                  xgBoost = M[2, ], 
                  svm = M[3, ],
                  gbm = M[4,],
-                 random = M[5, ])
+                 random = M[5, ],
+                 adaboost = M[6,])
 
 correlations <- cor(df_cor)
 corrplot.mixed(correlations)

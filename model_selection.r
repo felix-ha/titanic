@@ -155,26 +155,28 @@ model_evaluation <- function(df, cores = 1, tuneLength = 1, repeats = 10,
   
 # adaboost ----------------------------------------------------------------
 
+  ada.grid <- expand.grid(nIter = c(6, 11:20),  method = "Adaboost.M1")
+  
   # if(adaboost) {
   # 
-  # fit  <-  train(
-  #   form = Survived ~.,
-  #   data = df,
-  #   trControl = train_control,
-  #   method = "adaboost",
-  #   tuneLength = tuneLength
-  # )
-  # 
-  # fit_result <- as_tibble(fit$results) %>%
-  #   arrange(desc(Accuracy))
-  # 
-  # result %<>% add_row(Model = "adaboost",
-  #                     Accuracy = fit_result$Accuracy[1])
-  # if(do_print) {
-  #   print("adaboost")
-  #   print(fit_result)
-  #   cat("\n")
-  # }
+  fit  <-  train(
+    form = Survived ~.,
+    data = df,
+    trControl = train_control,
+    method = "adaboost",
+    tuneGrid = ada.grid
+  )
+
+  fit_result <- as_tibble(fit$results) %>%
+    arrange(desc(Accuracy))
+
+  result %<>% add_row(Model = "adaboost",
+                      Accuracy = fit_result$Accuracy[1])
+  if(do_print) {
+    print("adaboost")
+    print(fit_result)
+    cat("\n")
+  }
   # 
   # }
 
@@ -236,28 +238,28 @@ model_evaluation <- function(df, cores = 1, tuneLength = 1, repeats = 10,
 
 # random forest -----------------------------------------------------------
   
-  ranger.grid <- expand.grid(mtry = 7, min.node.size = 1,  splitrule = "gini")
-
-  
-  fit  <-  train(
-    form = Survived ~.,
-    data = df,
-    trControl = train_control,
-    method = "ranger",
-    tuneGrid =   ranger.grid
-
-  )
-  
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-  
-  result %<>% add_row(Model = "random forest",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("random forest")
-    print(fit_result)
-    cat("\n")
-  }
+  # ranger.grid <- expand.grid(mtry = 7, min.node.size = 1,  splitrule = "gini")
+  # 
+  # 
+  # fit  <-  train(
+  #   form = Survived ~.,
+  #   data = df,
+  #   trControl = train_control,
+  #   method = "ranger",
+  #   tuneGrid =   ranger.grid
+  # 
+  # )
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "random forest",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("random forest")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
   
 
 # bagging -----------------------------------------------------------------
