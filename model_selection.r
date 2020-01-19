@@ -180,24 +180,24 @@ model_evaluation <- function(df, cores = 1, tuneLength = 1, repeats = 10,
 
 # GBM ---------------------------------------------------------------------
 
-  #   fit  <-  train(
-  #   form = Survived ~.,
-  #   data = df,
-  #   trControl = train_control,
-  #   method = "gbm",
-  #   tuneLength = tuneLength
-  # )
-  # 
-  # fit_result <- as_tibble(fit$results) %>%
-  #   arrange(desc(Accuracy))
-  # 
-  # result %<>% add_row(Model = "gbm",
-  #                     Accuracy = fit_result$Accuracy[1])
-  # if(do_print) {
-  #   print("gbm")
-  #   print(fit_result)
-  #   cat("\n")
-  # }
+    fit  <-  train(
+    form = Survived ~.,
+    data = df,
+    trControl = train_control,
+    method = "gbm",
+    tuneLength = tuneLength
+  )
+
+  fit_result <- as_tibble(fit$results) %>%
+    arrange(desc(Accuracy))
+
+  result %<>% add_row(Model = "gbm",
+                      Accuracy = fit_result$Accuracy[1])
+  if(do_print) {
+    print("gbm")
+    print(fit_result)
+    cat("\n")
+  }
   
   
   # xgboost ----------------------------------------------------------------
@@ -284,28 +284,28 @@ model_evaluation <- function(df, cores = 1, tuneLength = 1, repeats = 10,
 
 # SVM Radial ---------------------------------------------------------------------
 
-  svm.grid <- expand.grid(sigma = c(0.1, 0.0563, 0.01),
-                          C =  c(3, 4, 3.5, 4.5, 5, 6))
-                          
-  
-  fit <- train(form = Survived ~.,
-                  data = df,
-                  trControl = train_control,
-                  method = "svmRadial",
-                  preProc = c("center", "scale"),
-                  # tuneLength = tuneLength,
-               tuneGrid =  svm.grid)
-
-  fit_result <- as_tibble(fit$results) %>%
-    arrange(desc(Accuracy))
-
-  result %<>% add_row(Model = "SVM Radial",
-                      Accuracy = fit_result$Accuracy[1])
-  if(do_print) {
-    print("SVM Radial")
-    print(fit_result)
-    cat("\n")
-  }
+  # svm.grid <- expand.grid(sigma = c(0.1, 0.0563, 0.01),
+  #                         C =  c(3, 4, 3.5, 4.5, 5, 6))
+  #                         
+  # 
+  # fit <- train(form = Survived ~.,
+  #                 data = df,
+  #                 trControl = train_control,
+  #                 method = "svmRadial",
+  #                 preProc = c("center", "scale"),
+  #                 # tuneLength = tuneLength,
+  #              tuneGrid =  svm.grid)
+  # 
+  # fit_result <- as_tibble(fit$results) %>%
+  #   arrange(desc(Accuracy))
+  # 
+  # result %<>% add_row(Model = "SVM Radial",
+  #                     Accuracy = fit_result$Accuracy[1])
+  # if(do_print) {
+  #   print("SVM Radial")
+  #   print(fit_result)
+  #   cat("\n")
+  # }
 
   # # XGBoost  Custon CV -----------------------------------------------------------------
   # 

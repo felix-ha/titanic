@@ -145,12 +145,35 @@ predict_svm <- function(training, test) {
 }
 
 
+predict_gbm <- function(training, test) {
+  
+  train_control <- trainControl(method = "repeatedcv", repeats = 1, number = 2, allowParallel=F)
+  
+  gbm.grid <- expand.grid(shrinkage = 0.1,
+                          interaction.depth = 10, 
+                          n.minobsinnode = 10, 
+                          n.trees= 50)
+ 
 
+  fit  <-  train(
+    form = Survived ~.,
+    data = training,
+    trControl = train_control,
+    method = "gbm",
+    tuneGrid =  gbm.grid
+  )
+  
+  y_preditions <- as.integer(predict(fit, test)) - 1
+  
+  return(y_preditions)
 
+}
 
 predictions <- c(LogisticRegression = predict_logistic_regression(training, test),
                  xgb = predict_xgboost(training, test),
-                 svm = predict_svm(training, test))
+                 svm = predict_svm(training, test),
+                 gbm = predict_gbm(training, test))
+
 
 
 observations <-  nrow(test)
@@ -171,7 +194,10 @@ write_csv(prediction_result, "submission.csv")
 
 library(corrplot)
 
-df_cor <- tibble(LogReg = M[1, ], xgBoost = M[2, ], svm = M[3, ])
+df_cor <- tibble(LogReg = M[1, ], 
+                 xgBoost = M[2, ], 
+                 svm = M[3, ],
+                 gbm = M[4,])
 
 correlations <- cor(df_cor)
 corrplot.mixed(correlations)

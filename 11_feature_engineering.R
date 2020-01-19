@@ -187,7 +187,7 @@ sink(file.path("log", "EVALUATION_engin.txt"))
 df <- preprocess_final(df_raw)
 
 
-fit <- model_evaluation(df,cores = 4, tuneLength = 10, repeats = 1,
+fit <- model_evaluation(df,cores = 4, tuneLength = 7, repeats = 10,
                         do_print = TRUE, adaboost = FALSE)
 
 sink()
