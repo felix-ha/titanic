@@ -48,14 +48,22 @@ df <- df %>%
            RelativesFriends  == 1 ~ "One",
            RelativesFriends  <= 4 ~ "Small",
            TRUE ~ "Large"),
-         RelativesFriends = factor(RelativesFriends)
+         RelativesFriends = factor(RelativesFriends),
+         
+         
+         Ticket = str_sub(Ticket,1,1),
+         Ticket = case_when(
+           str_detect(Ticket, "^\\d") ~ "Digit",
+           TRUE ~ Ticket
+         ),
+         Ticket = factor(Ticket)
          
          
   ) 
 
 df$Embarked[is.na(df$Embarked)] <- "S"
 
-df  <- df %>% select(-PassengerId, -Ticket, -Name)
+df  <- df %>% select(-PassengerId, -Name)
 
 
 # Impute Age with knn---------------------
@@ -169,10 +177,36 @@ predict_gbm <- function(training, test) {
 
 }
 
+predict_random_forest <- function(training, test) {
+  
+  train_control <- trainControl(method = "repeatedcv", repeats = 1, number = 2, allowParallel=F)
+  
+  ranger.grid <- expand.grid(mtry = 7, min.node.size = 1,  splitrule = "gini")
+  
+  
+  fit  <-  train(
+    form = Survived ~.,
+    data = training,
+    trControl = train_control,
+    method = "ranger",
+    tuneGrid =   ranger.grid
+    
+  )
+
+  y_preditions <- as.integer(predict(fit, test)) - 1
+  
+  return(y_preditions)
+  
+}
+
+
+
+
 predictions <- c(LogisticRegression = predict_logistic_regression(training, test),
                  xgb = predict_xgboost(training, test),
                  svm = predict_svm(training, test),
-                 gbm = predict_gbm(training, test))
+                 gbm = predict_gbm(training, test),
+                 random_forest = predict_random_forest(training, test))
 
 
 
@@ -197,7 +231,8 @@ library(corrplot)
 df_cor <- tibble(LogReg = M[1, ], 
                  xgBoost = M[2, ], 
                  svm = M[3, ],
-                 gbm = M[4,])
+                 gbm = M[4,],
+                 random = M[5, ])
 
 correlations <- cor(df_cor)
 corrplot.mixed(correlations)

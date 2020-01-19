@@ -40,14 +40,21 @@ preprocess_final <- function(df) {
              RelativesFriends  == 1 ~ "One",
              RelativesFriends  <= 4 ~ "Small",
              TRUE ~ "Large"),
-           RelativesFriends = factor(RelativesFriends)
+           RelativesFriends = factor(RelativesFriends),
+           
+           Ticket = str_sub(Ticket,1,1),
+           Ticket = case_when(
+             str_detect(Ticket, "^\\d") ~ "Digit",
+             TRUE ~ Ticket
+           ),
+           Ticket = factor(Ticket)
            
            
     ) 
   
   df$Embarked[is.na(df$Embarked)] <- "S"
   
-  df  <- df %>% select(-PassengerId, -Ticket, -Name)
+  df  <- df %>% select(-PassengerId, -Name)
   
   
   # Impute Age with knn---------------------
@@ -187,7 +194,7 @@ sink(file.path("log", "EVALUATION_engin.txt"))
 df <- preprocess_final(df_raw)
 
 
-fit <- model_evaluation(df,cores = 4, tuneLength = 7, repeats = 10,
+fit <- model_evaluation(df,cores = 4, tuneLength = 1, repeats = 1,
                         do_print = TRUE, adaboost = FALSE)
 
 sink()
